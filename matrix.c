@@ -80,24 +80,63 @@ double val ){
     //La ligne existe et la valeur aussi 
     struct line* tracker = (struct line*) malloc(sizeof(struct line));
     newmatrix->lines = (struct line*) malloc(sizeof(struct line))
-    tracker = newmatrix->lines;
-    struct elem elemtracker = (struct elem*) malloc(sizeof(struct elem));
-    elemtracker=newmatrix->lines->elems;
+    tracker = sp_matrix->lines;
+    struct elem* elemtracker = (struct elem*) malloc(sizeof(struct elem));
+    elemtracker=sp_matrix->lines->elems;
     int nlinescount = nlines;
     
-
-
-    while (nlines!=){
+    //cas 1: la ligne n'existe pas (et donc l'élément non plus)
+    //cas 2: la ligne existe 
+    //cas 2.1: la ligne existe et l'élément existe
+    //cas 2.2: la ligne existe et l'élément n'existe pas 
+    
+    //newmatrix->lines->next = (struct line*) malloc(sizeof(struct line));
         
-        newmatrix->lines->next = (struct line*) malloc(sizeof(struct line));
-        while(elemtracker!=NULL){
 
+    while (i < tracker->next->i){
+        
+        tracker = tracker->next;
 
-        }
-        tracker = newmatrix->lines->next;
+    }   
+
+    // La ligne cible n'existe pas 
+    if (tracker->next->i>i){
+        struct line* newline = (struct line*) malloc(sizeof(struct line));
+        struct line* temp = (struct line*) malloc(sizeof(struct line));
+        newline->i=i;
+        temp = tracker->next;
+        tracker= newline;
+        tracker->next = temp;
+        free(temp);    
+
     }
 
+    elemtracker = tracker->elems;
+    while(elemtracker->j<j){
+        elemtracker = elemtracker->next; 
+    }
 
+    // L'élément cible n'existe pas
+    if (elemtracker->next->j>j){
+        struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
+        struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
+        
+        newelem->j = j;
+        newelem->value = value;
+        temp = elemtracker->next;
+        tracker = newelem;
+        elemtracker->next = tempelem;
+        free(tempelem);
+
+
+    }    
+
+    return sp_matrix;
+   
+   //Quid si matrice vide à la base? Quid si aucun élément dans la ligne à la base? 
+
+
+    
 
     return 0;
 }
@@ -342,13 +381,60 @@ dit, la valeur de elems[i][j] de la nouvelle matrice est égal à l’élément 
 //1.1.10 Sauvegarde d’une matrice dans un fichier
 int matrix_save ( const struct matrix *matrix , char * path ){
 
-fopen()
-fclose()
+    FILE* fp;
+    //make sure this works with path like this!
+    filename = strcat(path,".csv");
+    fp = fopen(filename, "w+");
+    if(fp==NULL){return -1;}
+    double temp=0;
+    for (int i=0; i<matrix->ncols;i++){
+        
+        fprintf(fp,"\n");
+        
+        for (int j=0; j<matrix->ncols;j++){
+            
+            temp = matrix_get(matrix,i,j);      
+            fpritnf(fp,",%d",temp);
+            temp = 0;
+        
+        }
+    }    
+    int closingstatus = fclose(fp);
+    if (closingstatus!=0){return -1;}
 
+    return 0;
 
 
 }
-int sp_matrix_save ( const struct sp_matrix *matrix , char * path );
+int sp_matrix_save ( const struct sp_matrix *matrix , char * path ){
+
+    FILE* fp;
+    //make sure this works with path like this!
+    filename = strcat(path,".csv");
+    fp = fopen(filename, "w+");
+    if(fp==NULL){return -1;}
+    double temp=0;
+    
+    for (int i=0; i<matrix->ncols;i++){
+        
+        fprintf(fp,"\n");
+        
+        for (int j=0; j<matrix->ncols;j++){
+            
+            temp = sp_matrix_get(matrix,i,j);      
+            fpritnf(fp,",%d",temp);
+            temp = 0;
+        
+        }
+    }    
+
+    int closingstatus = fclose(fp);
+    if (closingstatus!=0){return -1;}
+
+    return 0;
+
+
+}
 
 /* Cette fonction sauvegarde une matrice matrix dans un fichier dont le chemin est donné par l’argument path.
 Si le fichier existe, son contenu est remplacé. Elle retourne 0 en cas de succès, -1 en cas d’erreur.
@@ -357,8 +443,92 @@ Ce choix devra être justifié dans un rapport annexe. */
 
 //1.1.11 Chargement d’une matrice à partir d’un fichier
 
-struct matrix * matrix_load ( char * path );
+struct matrix * matrix_load ( char * path ){
+
+    fp= fopen(path, "r");
+    char ch;
+    int nbrlignes=0;
+    if (fp==NULL){return -1;}
+    int maxcharperline=0;
+    int nbcharthisline=0;
+        //compter les lignes du fichier 
+    
+    while(!=feof(fp)){
+        ch = fgetc(fp);
+        nbcharthisline++;
+        if (nbcharthisline>maxcharperline){maxcharperline=nbcharthisline;}
+        if (ch== '\n'){
+            nbrlignes++;
+            nbcharthisline=0;
+        }
+
+    }
+
+    rewind(fp);
+
+
+    struct matrix* tab = matrix_init(nbrlignes,maxcharperline);
+
+
+      for (int i=0; i<tab->ncols;i++){
+        
+        
+        for (int j=0; j<tab->ncols;j++){
+            
+            ch = fgetc(fp);
+            matrix_set(matrix,i,j,ch);
+            
+        }
+    }    
+
+    return tab;
+}
+
 struct sp_matrix * sp_matrix_load ( char * path );
+{
+    
+    struct matrix* output = sp_matrix_init (precision, matrix->nlines, matrix->ncols);
+    
+    fp= fopen(path, "r");
+    char ch;
+    int nbrlignes=0;
+    if (fp==NULL){return -1;}
+    int maxcharperline=0;
+    int nbcharthisline=0;
+        //compter les lignes du fichier 
+    
+    while(!=feof(fp)){
+        ch = fgetc(fp);
+        nbcharthisline++;
+        if (nbcharthisline>maxcharperline){maxcharperline=nbcharthisline;}
+        if (ch== '\n'){
+            nbrlignes++;
+            nbcharthisline=0;
+        }
+
+    }
+
+    rewind(fp);
+
+
+    struct matrix* output = matrix_init(nbrlignes,maxcharperline);
+
+
+      for (int i=0; i<output->ncols;i++){
+        
+        
+        for (int j=0; j<output->ncols;j++){
+            
+            ch = fgetc(fp);
+            sp_matrix_set(output,i,j,ch);
+            
+        }
+    }    
+
+    return output;
+}
+
+
 
 /*Cette fonction charge et retourne une matrice depuis un fichier dont le chemin est donné par l’argument path.
 En cas d’erreur, elle retourne -1.

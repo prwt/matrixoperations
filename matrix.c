@@ -1,5 +1,15 @@
 #include <stdio.h>
 #include <matrix.h>
+#include <stdlib.h>
+
+/* ### TODO ###
+- Manage insert 0 in sp_init
+- Properly manage edge cases of 1st element, middle and last element
+- Start testing 
+- Write report
+- Check that #mallocs = #free 
+*/
+
 
 
 //1.1.1 Initialisation
@@ -11,12 +21,20 @@ la valeur 0 (zéro).*/
 //ok
 struct matrix * matrix_init ( unsigned int nlines , unsigned int ncols )
 {
-    struct matrix* tab [nlines][ncols] = malloc (sizeof(int)*ncols*nlines);
+    struct matrix* tab = malloc (sizeof(struct matrix));
+    tab->nlines=nlines;
+    tab->ncols=ncols;
+
+    double **arr = (double **)malloc(newmat->nlines * sizeof(double*));
+    for (int i=0; i<newmat->nlines; i++){
+         arr[i] = (double *)malloc(newmat->ncols * sizeof(double));}
+    
+    tab->elems = arr;
+
     if (tab==NULL) return NULL;
     return tab;
 }
 
-//WIP
 struct sp_matrix * sp_matrix_init ( double precision , unsigned int nlines ,
 unsigned int ncols ){
     
@@ -24,6 +42,7 @@ unsigned int ncols ){
     if (newmatrix==NULL) return NULL;
 
     newmatrix->precision = precision;
+    newmatrix->lines=NULL;
     newmatrix->nlines = nlines;
     newmatrix->ncols = ncols;
 
@@ -34,6 +53,13 @@ unsigned int ncols ){
 //1.1.2 Destruction
 //ok
 void matrix_free ( struct matrix * matrix ){
+    for (int i=0; i<matrix->nlines; i++){
+
+        free(matrix->elems[i]);
+
+    }
+    
+    free(matrix->elems);
     free(matrix);
 }
 //ok
@@ -64,8 +90,7 @@ void sp_matrix_free ( struct sp_matrix * matrix ) {
 //1.1.3 Définition de la valeur d’un élément d’une matrice
 //ok
 int matrix_set ( struct matrix *matrix , unsigned int i, unsigned int j, double val ){
-
-    matrix[i][j] = val;
+    matrix->elems[i][j] = val;
     return matrix;
 
 }
@@ -73,65 +98,150 @@ int matrix_set ( struct matrix *matrix , unsigned int i, unsigned int j, double 
 int sp_matrix_set ( struct sp_matrix * sp_matrix , unsigned int i, unsigned int j,
 double val ){
 
-    //gestion erreur
-
-    //La ligne n'existe pas
-    //La ligne existe mais pas la valeur
-    //La ligne existe et la valeur aussi 
     struct line* tracker = (struct line*) malloc(sizeof(struct line));
-    newmatrix->lines = (struct line*) malloc(sizeof(struct line))
+    sp_matrix->lines = (struct line*) malloc(sizeof(struct line))
     tracker = sp_matrix->lines;
     struct elem* elemtracker = (struct elem*) malloc(sizeof(struct elem));
     elemtracker=sp_matrix->lines->elems;
     int nlinescount = nlines;
     
-    //cas 1: la ligne n'existe pas (et donc l'élément non plus)
-    //cas 2: la ligne existe 
-    //cas 2.1: la ligne existe et l'élément existe
-    //cas 2.2: la ligne existe et l'élément n'existe pas 
-    
     //newmatrix->lines->next = (struct line*) malloc(sizeof(struct line));
         
+    
 
-    while (i < tracker->next->i){
-        
-        tracker = tracker->next;
-
-    }   
 
     // La ligne cible n'existe pas 
-    if (tracker->next->i>i){
+    // Résoud cas limites e.g. insérer 1ere ligne dans la matrice, dernière ligne dans la matrice et seule ligne dans la matrice
+    // 1ere ligne dans la matrice: 
+    // derniere ligne dans la matrice:
+
+    // seule ligne dans la matrice
+
+
+
+    //Cas spécial: if val = 0 or val < sp_matrix_precision, ajouter la valeur = l'enlever 
+    if((val==0)||(val<sp_matrix_precision){
+        //Avant de parcourir pour trouver la valeur, vérifier qu'elle existe au sein de la matrice
+        if(sp_matrix_get(sp_matrix,i,j)!=0){
+            
+
+            // 1ere ligne
+            
+                // 1er element
+            
+                // cas general // dernier element
+            // cas general// derniere ligne
+                // 1er element
+            
+                // cas general // dernier element
+
+        }
+    }
+    else{
+
+
+    if (sp_matrix->lines==NULL){
         struct line* newline = (struct line*) malloc(sizeof(struct line));
-        struct line* temp = (struct line*) malloc(sizeof(struct line));
-        newline->i=i;
-        temp = tracker->next;
-        tracker= newline;
-        tracker->next = temp;
-        free(temp);    
-
-    }
-
-    elemtracker = tracker->elems;
-    while(elemtracker->j<j){
-        elemtracker = elemtracker->next; 
-    }
-
-    // L'élément cible n'existe pas
-    if (elemtracker->next->j>j){
         struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
-        struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
+        sp_matrix->lines = newline;
+        sp_matrix->lines->i = i;
+        sp_matrix->lines->elems = newelem;
+        sp_matrix->lines->elems->next = NULL;
+        sp_matrix->lines->elems->j = j;
+        sp_matrix->lines->elems->value = val;
         
-        newelem->j = j;
-        newelem->value = value;
-        temp = elemtracker->next;
-        tracker = newelem;
-        elemtracker->next = tempelem;
-        free(tempelem);
+    }
+
+    else{
+            
+            //Ajouter 1ere ligne
+            if(sp_matrix->lines->i>i){
+
+            struct line* newline = (struct line*) malloc(sizeof(struct line));
+            struct line* temp = (struct line*) malloc(sizeof(struct line));
+            temp = sp_matrix->lines;
+            sp_matrix->lines = newline;
+            newlines->next = temp;
+            free(temp);
+            struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
+            sp_matrix->lines->elems = newelem;
+            sp_matrix->lines->elems->next = NULL;
+            sp_matrix->lines->elems->j = j;
+            sp_matrix->lines->elems->value = val;
+           
+            }
+        
+            else{
+        
+                
+                //if tracker->next==NULL, tracker->next->i =0 and if i > 0 infinite loop 
+                while ((i > tracker->next->i)&&(tracker->next!=NULL)){
+                
+                tracker = tracker->next;
+
+                }   
 
 
-    }    
+                if (tracker->next->i>i){
+                    struct line* newline = (struct line*) malloc(sizeof(struct line));
+                    struct line* temp = (struct line*) malloc(sizeof(struct line));
+                    if((temp==NULL)||(newline==NULL){return -1;}
 
-    return sp_matrix;
+                    newline->i=i;
+                    temp = tracker->next;
+                    tracker= newline;
+                    tracker->next = temp;
+                    free(temp);    
+                    }
+                
+                
+                elemtracker = tracker->elems;
+                
+                //element to be added is first 
+                if(elemtracker==NULL){
+                    struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
+                    struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
+                    if((tempelem==NULL)||(newelem==NULL){return -1;}
+                    newelem->j = j;
+                    newelem->value = val;
+                    tempelem = elemtracker->next;
+                    tracker = newelem;
+                    elemtracker->next = tempelem;
+                    free(tempelem);
+
+                }
+                else{
+                
+                while((elemtracker->next->j<j)&&(tracker->next!=NULL)){
+                elemtracker = elemtracker->next; 
+                }
+
+                 // L'élément cible n'existe pas
+                if (elemtracker->next->j>j){
+                struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
+                struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
+
+                if((tempelem==NULL)||(newelem==NULL){return -1;}
+
+                newelem->j = j;
+                newelem->value = val;
+                tempelem = elemtracker->next;
+                tracker = newelem;
+                elemtracker->next = tempelem;
+                
+                //L'element ajoute est le 1er de la liste (pointé par line)
+                
+                
+                free(tempelem);
+                }
+                //Element cible existe
+                else if(elemtracker->next->j==j){
+                    elemtracker->next->value = val;
+                }  
+                }
+            }
+        }
+    }
    
    //Quid si matrice vide à la base? Quid si aucun élément dans la ligne à la base? 
 

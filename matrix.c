@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <matrix.h>
 #include <stdlib.h>
-
+#include <string.h>
+#include <cstdio.h>
 /* ### TODO ###
 - Manage insert 0 in sp_init
 - Properly manage edge cases of 1st element, middle and last element
@@ -25,9 +26,9 @@ struct matrix * matrix_init ( unsigned int nlines , unsigned int ncols )
     tab->nlines=nlines;
     tab->ncols=ncols;
 
-    double **arr = (double **)malloc(newmat->nlines * sizeof(double*));
-    for (int i=0; i<newmat->nlines; i++){
-         arr[i] = (double *)malloc(newmat->ncols * sizeof(double));}
+    double **arr = (double **)malloc(tab->nlines * sizeof(double*));
+    for (int i=0; i<tab->nlines; i++){
+         arr[i] = (double *)malloc(tab->ncols * sizeof(double));}
     
     tab->elems = arr;
 
@@ -79,7 +80,7 @@ void sp_matrix_free ( struct sp_matrix * matrix ) {
 
         }
         tracker = matrix->lines->next;
-        free (matrix->lines)
+        free (matrix->lines);
         matrix->lines = tracker;
     }
 
@@ -91,7 +92,7 @@ void sp_matrix_free ( struct sp_matrix * matrix ) {
 //ok
 int matrix_set ( struct matrix *matrix , unsigned int i, unsigned int j, double val ){
     matrix->elems[i][j] = val;
-    return matrix;
+    return 1;
 
 }
 
@@ -99,11 +100,11 @@ int sp_matrix_set ( struct sp_matrix * sp_matrix , unsigned int i, unsigned int 
 double val ){
 
     struct line* tracker = (struct line*) malloc(sizeof(struct line));
-    sp_matrix->lines = (struct line*) malloc(sizeof(struct line))
+    sp_matrix->lines = (struct line*) malloc(sizeof(struct line));
     tracker = sp_matrix->lines;
     struct elem* elemtracker = (struct elem*) malloc(sizeof(struct elem));
     elemtracker=sp_matrix->lines->elems;
-    int nlinescount = nlines;
+    int nlinescount = sp_matrix->nlines;
     
     //newmatrix->lines->next = (struct line*) malloc(sizeof(struct line));
         
@@ -119,8 +120,9 @@ double val ){
 
 
 
-    //Cas spécial: if val = 0 or val < sp_matrix_precision, ajouter la valeur = l'enlever 
-    if((val==0)||(val<sp_matrix_precision){
+    //Cas spécial: if val = 0 or val < sp_matrix_precision, ajouter la valeur = 
+    
+    if((val==0)||(val<sp_matrix->precision)){
         //Avant de parcourir pour trouver la valeur, vérifier qu'elle existe au sein de la matrice
         if(sp_matrix_get(sp_matrix,i,j)!=0){
             
@@ -161,7 +163,7 @@ double val ){
             struct line* temp = (struct line*) malloc(sizeof(struct line));
             temp = sp_matrix->lines;
             sp_matrix->lines = newline;
-            newlines->next = temp;
+            newline->next = temp;
             free(temp);
             struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
             sp_matrix->lines->elems = newelem;
@@ -185,7 +187,7 @@ double val ){
                 if (tracker->next->i>i){
                     struct line* newline = (struct line*) malloc(sizeof(struct line));
                     struct line* temp = (struct line*) malloc(sizeof(struct line));
-                    if((temp==NULL)||(newline==NULL){return -1;}
+                    if((temp==NULL)||(newline==NULL)){return -1;}
 
                     newline->i=i;
                     temp = tracker->next;
@@ -201,15 +203,16 @@ double val ){
                 if(elemtracker==NULL){
                     struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
                     struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
-                    if((tempelem==NULL)||(newelem==NULL){return -1;}
+                    if((tempelem==NULL)||(newelem==NULL)){return -1;}
                     newelem->j = j;
                     newelem->value = val;
                     tempelem = elemtracker->next;
-                    tracker = newelem;
+                    elemtracker = newelem;
                     elemtracker->next = tempelem;
                     free(tempelem);
 
                 }
+                
                 else{
                 
                 while((elemtracker->next->j<j)&&(tracker->next!=NULL)){
@@ -221,12 +224,12 @@ double val ){
                 struct elem* newelem = (struct elem*) malloc(sizeof(struct elem));
                 struct elem* tempelem = (struct elem*) malloc(sizeof(struct elem));
 
-                if((tempelem==NULL)||(newelem==NULL){return -1;}
+                if((tempelem==NULL)||(newelem==NULL)){return -1;}
 
                 newelem->j = j;
                 newelem->value = val;
                 tempelem = elemtracker->next;
-                tracker = newelem;
+                elemtracker = newelem;
                 elemtracker->next = tempelem;
                 
                 //L'element ajoute est le 1er de la liste (pointé par line)
@@ -263,15 +266,14 @@ Réfléchissez notamment aux cas suivants (liste non exhaustive) :
 //1.1.4 Récupération de la valeur d’un élément d’une matrice
 
 double matrix_get ( const struct matrix *matrix , unsigned int i, unsigned int j){
-
-    return matrix[i][j];
+	double ret = matrix->elems[i][j];
+	return ret; 
 };
-doub    le sp_matrix_get ( const struct sp_matrix *matrix , unsigned int i,
-unsigned int j){
+	double sp_matrix_get ( const struct sp_matrix *matrix , unsigned int i, unsigned int j){
 
     struct line* tracker = (struct line*) malloc(sizeof(struct line));
-    tracker = newmatrix->lines;
-    struct elem elemtracker = (struct elem*) malloc(sizeof(struct elem));
+    tracker = matrix->lines;
+    struct elem* elemtracker = (struct elem*) malloc(sizeof(struct elem));
     
     while((tracker->i!=i)&&(tracker!=NULL)){
         tracker = tracker->next;
@@ -307,14 +309,14 @@ struct matrix * matrix_add ( const struct matrix *m1 , const struct matrix *m2 )
 
     if ((m1->nlines != m2->nlines) || (m1->ncols!=m2->ncols)){return NULL;}
 
-   struct matrix* sumtab [nlines][ncols] = malloc (sizeof(int)*ncols*nlines);
+   struct matrix* sumtab = matrix_init(m1->nlines,m2->ncols);
 
     for (int i=0; i<m1->nlines;i++){
         
         for (int j=0; j<m1->ncols;j++)
         {
 
-            sumtab[i][j]=m1[i][j] + m2[i][j];
+            sumtab->elems[i][j]=m1->elems[i][j] + m2->elems[i][j];
         }
     }
 
@@ -326,14 +328,15 @@ struct sp_matrix * sp_matrix_add ( const struct sp_matrix *m1 ,
 const struct sp_matrix *m2 ){
     if ((m1->nlines!=m2->nlines)||(m1->ncols!=m2->ncols)){return NULL;}
     
-    struct matrix* output = sp_matrix_init ( m1->precision, m1->nlines, m1->ncols);
+    struct sp_matrix* output = (struct sp_matrix*) sp_matrix_init ( m1->precision, m1->nlines, m1->ncols);
+    if(output==NULL){return NULL;}
     double temp = 0; 
 
     for (int i=0; i<m1->nlines;i++){
         
         for (int j=0; j<m1->ncols;j++){
             
-            temp = sp_matrix_get(m1, i, j) + sp_matrix_get(m2, i, j)
+            temp = sp_matrix_get(m1, i, j) + sp_matrix_get(m2, i, j);
             sp_matrix_set(output,i,j, temp);
             temp = 0;
 
@@ -370,13 +373,13 @@ struct matrix * matrix_transpose ( const struct matrix * matrix ){
 
 struct sp_matrix * sp_matrix_transpose ( const struct sp_matrix * matrix ){
 
-    struct matrix* output = sp_matrix_init ( m1->precision, m1->nlines, m1->ncols);
-
+    struct sp_matrix* output = sp_matrix_init ( matrix->precision, matrix->nlines, matrix->ncols);
+	double temp = 0;
     for (int i=0; i<matrix->nlines;i++){
         
         for (int j=0; j<matrix->ncols;j++){
             temp = sp_matrix_get(matrix,i,j);
-            matrix_set(output,j,i,temp);
+            sp_matrix_set(output,j,i,temp);
             temp = 0;
         }
     }
@@ -392,13 +395,13 @@ paramètre n’est pas modifiée.*/
 //1.1.7 Multiplication de deux matrices
 struct matrix * matrix_mult ( const struct matrix *m1 , const struct matrix *m2 ){
 
-    struct matrix* tab = matrix_init(matrix->ncols,matrix->nlines);
+    struct matrix* tab = matrix_init(m1->ncols,m1->nlines);
     double temp=0;
-    for (int i=0; i<m1->nlines){
+    for (int i=0; i<m1->nlines;i++){
         
-        for (int j=0;j<m1->ncols){
+        for (int j=0;j<m1->ncols;j++){
         
-            for (int k=0; k<m1->nlines){
+            for (int k=0; k<m1->nlines;k++){
                 temp = temp + matrix_get(m1,i,k)*matrix_get(m2,k,j);
             }
             matrix_set(tab,i,j,temp);
@@ -416,22 +419,22 @@ struct matrix * matrix_mult ( const struct matrix *m1 , const struct matrix *m2 
 struct sp_matrix * sp_matrix_mult ( const struct sp_matrix *m1 ,
 const struct sp_matrix *m2 ){
 
-    struct matrix* tab = matrix_init(matrix->ncols,matrix->nlines);
+    struct sp_matrix* tab = sp_matrix_init(m1->precision,m1->nlines,m1->ncols);
     
     double temp=0;
-    for (int i=0; i<m1->nlines){
+    for (int i=0; i<m1->nlines;i++){
         
-        for (int j=0;j<m1->ncols){
+        for (int j=0;j<m1->ncols;j++){
         
-            for (int k=0; k<m1->nlines){
+            for (int k=0; k<m1->nlines;k++){
                 temp = temp + sp_matrix_get(m1,i,k)*sp_matrix_get(m2,k,j);
             }
-            sp_matrix_set(output,i,j,temp);
+            sp_matrix_set(tab,i,j,temp);
             temp=0;
         }
     }
     
-    return output;
+    return tab;
 
 
 
@@ -444,7 +447,7 @@ deux matrices m1 et m2 ne sont pas modifiées.*/
 
 struct sp_matrix * matrix_to_sp_matrix ( const struct matrix *matrix, double precision ){
 
-    struct matrix* output = sp_matrix_init (precision, matrix->nlines, matrix->ncols);
+    struct sp_matrix* output = sp_matrix_init (precision, matrix->nlines, matrix->ncols);
     double temp=0;
 
     for (int i=0; i<matrix->nlines;i++){
@@ -469,7 +472,7 @@ dit, la valeur de l’élément (i,j) de la nouvelle matrice est égal à matrix
 struct matrix * sp_matrix_to_matrix ( const struct sp_matrix * matrix ){
 
     struct matrix* tab = matrix_init(matrix->ncols,matrix->nlines);
-    
+    double temp=0;
     for (int i=0; i<matrix->nlines;i++){
         
         for (int j=0; j<matrix->ncols;j++){
@@ -493,8 +496,8 @@ int matrix_save ( const struct matrix *matrix , char * path ){
 
     FILE* fp;
     //make sure this works with path like this!
-    filename = strcat(path,".csv");
-    fp = fopen(filename, "w+");
+    char* filename = strcat(path,".csv");
+    fp = fopen(path, "w+");
     if(fp==NULL){return -1;}
     double temp=0;
     for (int i=0; i<matrix->ncols;i++){
@@ -520,7 +523,7 @@ int sp_matrix_save ( const struct sp_matrix *matrix , char * path ){
 
     FILE* fp;
     //make sure this works with path like this!
-    filename = strcat(path,".csv");
+    char* filename = strcat(path,".csv");
     fp = fopen(filename, "w+");
     if(fp==NULL){return -1;}
     double temp=0;
@@ -554,16 +557,16 @@ Ce choix devra être justifié dans un rapport annexe. */
 //1.1.11 Chargement d’une matrice à partir d’un fichier
 
 struct matrix * matrix_load ( char * path ){
-
+	FILE* fp;
     fp= fopen(path, "r");
     char ch;
     int nbrlignes=0;
-    if (fp==NULL){return -1;}
+    if (fp==NULL){return NULL;}
     int maxcharperline=0;
     int nbcharthisline=0;
         //compter les lignes du fichier 
     
-    while(!=feof(fp)){
+    while(!feof(fp)){
         ch = fgetc(fp);
         nbcharthisline++;
         if (nbcharthisline>maxcharperline){maxcharperline=nbcharthisline;}
@@ -586,7 +589,7 @@ struct matrix * matrix_load ( char * path ){
         for (int j=0; j<tab->ncols;j++){
             
             ch = fgetc(fp);
-            matrix_set(matrix,i,j,ch);
+            matrix_set(tab,i,j,ch);
             
         }
     }    

@@ -2,7 +2,7 @@
 #include <matrix.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cstdio.h>
+//#include <cstdio.h>
 /* ### TODO ###
 - Manage insert 0 in sp_init
 - Properly manage edge cases of 1st element, middle and last element
@@ -507,7 +507,7 @@ int matrix_save ( const struct matrix *matrix , char * path ){
         for (int j=0; j<matrix->ncols;j++){
             
             temp = matrix_get(matrix,i,j);      
-            fpritnf(fp,",%d",temp);
+            fprintf(fp,",%d",temp);
             temp = 0;
         
         }
@@ -535,7 +535,7 @@ int sp_matrix_save ( const struct sp_matrix *matrix , char * path ){
         for (int j=0; j<matrix->ncols;j++){
             
             temp = sp_matrix_get(matrix,i,j);      
-            fpritnf(fp,",%d",temp);
+            fprintf(fp,",%d",temp);
             temp = 0;
         
         }
@@ -597,20 +597,19 @@ struct matrix * matrix_load ( char * path ){
     return tab;
 }
 
-struct sp_matrix * sp_matrix_load ( char * path );
+struct sp_matrix * sp_matrix_load ( char * path )
 {
     
-    struct matrix* output = sp_matrix_init (precision, matrix->nlines, matrix->ncols);
-    
-    fp= fopen(path, "r");
+
+    FILE* fp= fopen(path, "r");
     char ch;
     int nbrlignes=0;
-    if (fp==NULL){return -1;}
+    if (fp==NULL){return NULL;}
     int maxcharperline=0;
     int nbcharthisline=0;
         //compter les lignes du fichier 
     
-    while(!=feof(fp)){
+    while(!feof(fp)){
         ch = fgetc(fp);
         nbcharthisline++;
         if (nbcharthisline>maxcharperline){maxcharperline=nbcharthisline;}
@@ -623,10 +622,8 @@ struct sp_matrix * sp_matrix_load ( char * path );
 
     rewind(fp);
 
-
-    struct matrix* output = matrix_init(nbrlignes,maxcharperline);
-
-
+    struct sp_matrix* output = sp_matrix_init(0.001,nbrlignes,maxcharperline);
+    
       for (int i=0; i<output->ncols;i++){
         
         
